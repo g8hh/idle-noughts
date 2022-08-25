@@ -1,0 +1,745 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Idle Noughts</title>
+
+
+    
+    <link rel="stylesheet" href="index.css">
+    <link rel="icon" href="imgs/favicon.png">
+
+    <script src="common.js"></script>
+</head>
+<body>
+    <script src="https://cdn.jsdelivr.net/npm/biri/dist/biri.min.js"></script>
+    <script src="lookUp3b3.js"></script>
+    <script src="lookUp1d.js"></script>
+    <script src="break_infinity.min.js"></script>
+    <script src="ad-notations.min.js"></script>
+    <script src="names.js"></script>
+   
+    <div class="header">
+        
+        <div class="headerContent">
+            <h1>Idle Noughts</h1>
+            <h2>B.reef</h2>
+            <p><a href="https://github.com/aeolus-1/idlenoughts">->github here<-</a></p>
+            <p><a href="leaderboard.html" target="_blank">Leaderboard</a></p>
+            <button id="restartButton">Restart</button>
+            <button style="float: right; font-size: large;" id="helpMenuButton">?</button><br><br>
+            <button id="usernameButton">Change Username</button>
+            
+            
+        </div>
+        
+        
+        <div id="currencyDiv" class="headerContent tooltip">
+            
+            <p style="display: inline-block;">
+                Tics: 0
+                <progress id="miniProgressBar"></progress>
+                </p>
+            
+            <p>
+                Tacs: 0
+            </p>
+
+            <p style="display: inline-block;">
+                Toes: 0
+            </p>
+
+            <b>
+                 + 0 Toes 
+                 <button id="presigeButton">New Game Plus</button><br><br>
+                 <button id="toeShopButton" style="width:100%; height: 40px;">Toe Shop</button>
+            </b>
+            <span id="tooltip" class="tooltiptext">278362687</span>
+
+        </div>
+        <div style="margin-top: -10px;" id="botUpgradeDiv">
+            <div id="botUpgradeSlot" class="aiHolder" style="width: 130px; height: 130px; float: left; margin-top: -15px;" ondrop="drop(event)" ondragover="allowDrop(event)">
+            </div>
+            <h2>Upgrade Ais</h2>
+            <button id="upgradeDivSpeedUp">Upgrade Speed<br></button>
+            <button id="upgradeDivSkillUp">Upgrade Skill</button><br><br>
+            <button id="upgradeAllAiSpeed">Upgrade All Board Speeds</button>
+            <button id="upgradeAllAiSkill">Upgrade All Board Skill</button>
+
+           
+
+            <script>
+                
+               
+                
+                document.getElementById("upgradeAllAiSpeed").onclick = function(){
+                   
+                    function getBoardCost(id) {
+                        var c = 0
+                        for (let i = 0; i < ais.length; i++) {
+                            const ai = ais[i];
+                            c += parseInt(ai.costs[id].split(" ")[0])
+                        }
+                        return c
+                    }
+                    var cost = getBoardCost("speed")
+                    if (makePurchase(`${cost} tics`)) {
+                        for (let i = 0; i < ais.length; i++) {
+                            const ai = ais[i];
+                            ai.stats.speed = Math.round(ai.stats.speed * 0.9090909091)
+                            ai.costs.speed = multiplyCost(ai.costs.speed, 1.2)
+                            
+                        }
+                    }
+                }
+                document.getElementById("upgradeAllAiSkill").onclick = function(){
+                    function getBoardCost(id) {
+                        var c = 0
+                        for (let i = 0; i < ais.length; i++) {
+                            const ai = ais[i];
+                            c += parseInt(ai.costs[id].split(" ")[0])
+                        }
+                        return c
+                    }
+                    var cost = getBoardCost("skill")
+                    if (makePurchase(`${cost} tics`)) {
+                        for (let i = 0; i < ais.length; i++) {
+                            const ai = ais[i];
+                            
+                            ai.stats.globalSkill = (ai.stats.globalSkill) * 1.1
+                            ai.costs.skill = multiplyCost(ai.costs.skill, 1.1)
+                        }
+                    }
+                    
+                }
+                setInterval(() => {
+                    function getBoardCost(id) {
+                        var c = 0
+                        for (let i = 0; i < ais.length; i++) {
+                            const ai = ais[i];
+                            c += parseInt(ai.costs[id].split(" ")[0])
+                        }
+                        return c
+                    }
+                    document.getElementById("upgradeAllAiSpeed").innerHTML = `Upgrade All Ai Speeds<br>${getBoardCost("speed")} tics`
+                    document.getElementById("upgradeAllAiSkill").innerHTML = `Upgrade All Ai Skills<br>${getBoardCost("skill")} tics`
+                }, (1000/15));
+            </script>
+        </div>
+        <div id="botRecycleDiv" style="position: fixed; right: 10px; top: 10px;" >
+            <div id="botRecycleSlot" class="aiHolder" style="width: 130px; height: 130px; margin-top: 0px;" ondrop="drop(event)" ondragover="allowDrop(event)">
+            </div>
+            <button id="recycleButton" style="height: 130px;">Recycle</button>
+        </div>
+            
+    </div>
+    <div class="versionDiv">
+        v0.1.6.1 (2022)
+    </div>
+    <div id="toeShop" class="overlayScreen">
+        <button id="toeShopClose">
+            Close
+        </button>
+        <div class="toeShopDiv">
+
+            <h3 id="toeShopToeDisplay">12</h3><br>
+
+            <button class="toeShopButt"><b>Gain</b><p>2x</p><p>2x</p><p>Yay</p></button>
+            <button class="toeShopButt"><b>Speed</b><p>2x</p><p>50%+</p><p>Yay</p></button>
+            <button class="toeShopButt"><b>Skill</b><p>2x</p><p>15%+</p><p>Yay</p></button>
+
+        </div>
+       
+        <div class="toeShopDiv">
+
+            <h3 id="toeShopTierDisplay">Tier 1</h3><br>
+
+            <button id="upgradeTierButton" style="width: 60%; height: 300px; font-size: 500%; font-family: 'Courier New', Courier, monospace;"> Upgrade Tier</button>
+
+
+        </div>
+    </div>
+    <div id="helpMenu" class="overlayScreen">
+        <button id="helpClose">Close</button>
+        <h1>How To Play</h1>
+        <b> Introduction </b> 
+        <p> Welcome to Idle Noughts, the worlds first Idle TicTacToe game. In Idle Noughts you play TicTacToe to get money called ‘Tics’, use Tics to buy AI, use Ai to play more, play more to get more Tics, use more Tics to get more upgrades. Every time you lose or tie you get a tac, save Tacs for later.</p>
+        
+        <b> Artificial Intelligence </b> 
+        <p> In Idle Noughts you can buy AIs to do your work, you lazy fuck. There are different AI’s who act differently. You start with a Jai bot. Each bot has increasing intelligence, except Jai bot who doesn’t have a brain because he is retarted. In the tool bar you can upgrade your bots to play faster and learn faster. Learning faster means they will win more games. If your bot isn’t satisfactory you can recycle it for spare Tics, I recommend recycling Jai bot because it is a needy whore.</p>
+
+        <b> Boards </b> 
+        <p> To progress, buy more boards. There are three types of boards with different advantages. We know you are a selfish bastard so you can buy as many boards as you like. Upgrades are listed on the board and to delete a board use the button in the top right. To beat the game delete the first board.</p>
+
+        <b> Tics, Tacs, Toes </b> 
+        <p> Every time you lose a game you get a Tac, nobody wants Tacs because it means you suck dick, especially if you are using Jai bots. Luckily for your ungrateful ass you can buy Converter AIs which convert Tacs into something useful such as Tics or Toes.</p>
+
+        <p> This game is pretty kinky so you can collect Toes which you can use as a currency in the Toe Shop to unlock bonuses and upgrades. You can also upgrade your Tier to unlock more. Earn Tics to get a spot on the leader board and battle to be the biggest Nerd, good luck losers.</p>
+        <i> *DISClAIMER* We love Jai </i>
+    </div>
+    
+    
+
+
+    
+
+    <div style="margin-top: 200px;">
+        <div class="sideBar" >
+            <div class="buySideBar">
+                <div style="background:  rgba(218, 218, 218); margin: 3px;">
+                    <button class="collapsible">Board Ais ⬆︎</button>
+
+                    <div class="collapsibleContent">
+                        <div class="buyBlock tooltip">
+                            <button style="float: right; width: 60px; height: 100%;" onclick="buyAI('jai', 'board')">BUY MONEY $$$</button>
+
+                            jai AI<br>
+
+                            <p id="jai-AiBuyDisplay">
+                                Learning Rate:[skillNum]<br>
+                                Speed:[speedNum]
+                            </p>
+                            <span id="tooltip" class="tooltiptext">
+                                <h3>Jai Ai</h3>
+                                <p>Not the brightest AI out there. Takes after it's namesake.</p>
+                                <p>Speed: 700ms<br>LearningRate: 100%</p>
+                                <p id="tierReqBox"></p>
+                            </span>
+
+                        </div>
+                        
+                        <div class="buyBlock tooltip">
+                            <button style="float: right; width: 60px; height: 100%;" onclick="buyAI('baby', 'board')">BUY MONEY $$$</button>
+
+                            Baby AI<br>
+
+                            <p id="baby-AiBuyDisplay">
+                                Learning Rate:[skillNum]<br>
+                                Speed:[speedNum]
+                            </p>
+                            <span id="tooltip" class="tooltiptext">
+                                <h3>Baby AI</h3>
+                                <p>I would make a baby related joke but I've never had a baby before. Still better than Jai AI tho</p>
+                                <p>Speed: 700ms<br>LearningRate: 150%</p>
+                                <p id="tierReqBox"></p>
+                            </span>
+
+                        </div>
+                        <div class="buyBlock tooltip">
+                            <button style="float: right; width: 60px; height: 100%;" onclick="buyAI('mid', 'board')">BUY MONEY $$$</button>
+
+                            Mid AI<br>
+
+                            <p id="mid-AiBuyDisplay">
+                                Learning Rate:[skillNum]<br>
+                                Speed:[speedNum]
+                            </p>
+
+                            <span id="tooltip" class="tooltiptext">
+                                <h3>Mid AI</h3>
+                                <p>Midder than Mordius(2022).</p>
+                                <p>Speed: 700ms<br>LearningRate: 350%</p>
+                                <p id="tierReqBox"></p>
+                            </span>
+
+                        </div>
+                        <div class="buyBlock tooltip">
+                            <button style="float: right; width: 60px; height: 100%;" onclick="buyAI('adult', 'board')">BUY MONEY $$$</button>
+
+                            Adult AI<br>
+
+                            <p id="adult-AiBuyDisplay">
+                                Learning Rate:[skillNum]<br>
+                                Speed:[speedNum]
+                            </p>
+
+                            <span id="tooltip" class="tooltiptext">
+                                <h3>Adult AI</h3>
+                                <p>An responsible, independant AI with only a 5% learning rate increase compared to a Mid AI. There is minimal use in buy this. Dont buy this.</p>
+                                <p>Speed: 700ms<br>LearningRate: 400%</p>
+                                <p id="tierReqBox"></p>
+                            </span>
+
+                        </div>
+                        <div class="buyBlock tooltip">
+                            <button style="float: right; width: 60px; height: 100%;" onclick="buyAI('genius', 'board')">BUY MONEY $$$</button>
+
+                            Genius AI<br>
+
+                            <p id="genius-AiBuyDisplay">
+                                Learning Rate:[skillNum]<br>
+                                Speed:[speedNum]
+                            </p>
+
+                            <span id="tooltip" class="tooltiptext">
+                                <h3>Genius AI</h3>
+                                <p>Digital enbodiement of the devolper.</p>
+                                <p>Speed: 700ms<br>LearningRate: 700%</p>
+                                <p id="tierReqBox"></p>
+                            </span>
+
+                        </div>
+                    </div>
+                </div>
+                <div style="background:  rgba(218, 218, 218); margin: 3px;">
+                    <button class="collapsible">Converter Ais ⬆︎</button>
+
+                    <div class="collapsibleContent">
+                        <div class="buyBlock tooltip">
+                            <button style="float: right; width: 60px; height: 100%;" onclick="buyAI('tactotic-c', 'converter')">BUY MONEY $$$</button>
+
+                            Tac to Tic AI<br>
+
+                            <p id="tactotic-c-AiBuyDisplay">
+                                Speed:[speedNum]
+                            </p>
+
+                            <span id="tooltip" class="tooltiptext">
+                                <h3>Tac to Tic AI</h3>
+                                <p>Standard run of the mill ticcoin miner</p>
+                                <p>Speed: 1500ms</p>
+                                <p>1 Tac -> 1 Tic</p>
+                                <p id="tierReqBox"></p>
+                            </span>
+
+                        </div>
+                        <div class="buyBlock tooltip">
+                            <button style="float: right; width: 60px; height: 100%;" onclick="buyAI('tac&tictotoe-c', 'converter')">BUY MONEY $$$</button>
+
+                            Tisc to Toe AI<br>
+
+                            <p id="tac&tictotoe-c-AiBuyDisplay">
+                                Speed:[speedNum]
+                            </p>
+
+                            <span id="tooltip" class="tooltiptext">
+                                <h3>Toe Converter AI</h3>
+                                <p>DM me if you have joke<br>plz</p>
+                                <p>Speed: 5000ms</p>
+                                <p>50 Tics -> 1 Toe</p>
+                                <p id="tierReqBox"></p>
+                            </span>
+
+                        </div>
+                        
+                    </div>
+                </div>
+                
+            </div>
+            <div class="buySideBar">
+                <div >
+                    <div class="buyBlock tooltip" style="height: 150px;" id="basic-BoardBuyDisplay">
+                        <button style="float: right; width: 60px; height: 100%;" onclick="buyBoard('basic')">BUY MONEY $$$</button>
+    
+                        <b>Basic Board</b><br>
+                        <img src="imgs/basicBoard.png" alt="ur gay" width="20%">
+                        <p>
+                            Speed: 1000
+                            <br>
+                            Difficulty: 0.25
+                            <br>
+                            Disadvantage: 0
+                        </p>
+
+                        <span id="tooltip" class="tooltiptext">
+                            <h3>Basic Board</h3>
+                            <p><a href="https://aeolus-1.github.io/triangleGame.github.io/">>Click here for a free 500 Bitcoin (NO JOKE)<</a></p>
+                            <p>Speed: 300ms<br>Difficulty: 15%</p>
+                            <p>Produces 1 tics per win</p>
+                            <p id="tierReqBox"></p>
+                        </span>
+    
+                    </div>
+                    <div class="buyBlock tooltip" style="height: 150px;" id="gold-basic-BoardBuyDisplay">
+                        <button style="float: right; width: 60px; height: 100%;" onclick="buyBoard('gold-basic')">BUY MONEY $$$</button>
+    
+                        <b>Gold Basic Board</b><br>
+                        <img src="imgs/goldBoard.png" alt="ur gay" width="20%">
+    
+                        <p>
+                            Speed: 5000
+                            <br>
+                            Difficulty: 0.75
+                            <br>
+                            Disadvantage: 0.5
+                        </p>
+
+                        <span id="tooltip" class="tooltiptext">
+                            <h3>Gold Board</h3>
+                            <p>Produces gold</p>
+                            <p>Speed: 3000ms<br>Difficulty: 80%</p>
+                            <p>Produces 1 toe per win</p>
+
+                            <p id="tierReqBox"></p>
+                        </span>
+    
+                    </div>
+                    <div class="buyBlock tooltip" style="height: 150px;" id="1d-BoardBuyDisplay">
+                        <button style="float: right; width: 60px; height: 100%;" onclick="buyBoard('1d')">BUY MONEY $$$</button>
+    
+                        <b>1D Board</b><br>
+                        <img src="imgs/1dBoard.png" alt="ur gay" width="40%">
+    
+                        <p>
+                            Speed: 5000
+                            <br>
+                            Difficulty: 0.75
+                            <br>
+                            Disadvantage: 0.5
+                        </p>
+
+                        <span id="tooltip" class="tooltiptext">
+                            <h3>1D Board</h3>
+                            <p>An Irish teen-pop board<br>IDK I don't listen to their music</p>
+                            <p>Speed: 250ms<br>Difficulty: 15%</p>
+                            <p>Produces 2 tics per win<br>Produces 1 tics on tie</p>
+
+                            <p id="tierReqBox"></p>
+                        </span>
+    
+                    </div>
+                    <div class="buyBlock tooltip" style="height: 150px;" id="numerical-BoardBuyDisplay">
+                        <button style="float: right; width: 60px; height: 100%;" onclick="buyBoard('numerical')">BUY MONEY $$$</button>
+    
+                        <b>Numerical Board</b><br>
+                        <img src="imgs/basicBoard.png" alt="ur gay" width="20%">
+    
+                        <p>
+                            Speed: 250
+                            <br>
+                            Difficulty: 0.25
+                            <br>
+                            Disadvantage: 0
+                        </p>
+
+                        <span id="tooltip" class="tooltiptext">
+                            <h3>Numerical Board</h3>
+                            <p>The only board the AIs might be good</p>
+                            <p>Speed: 250ms<br>Difficulty: 25%</p>
+                            <p>Produces 3 tacs per tie</p>
+                            <p>Produces 10 tics per win</p>
+
+                            <p id="tierReqBox"></p>
+                        </span>
+    
+                    </div>
+                    
+                </div>
+                
+                
+            </div>
+        </div>
+
+        
+        <hr>
+
+
+
+        <div class="pageSection">
+            
+            <div id="preset-boardAi" style="display: none;">
+                <div id="${Math.random()}" class="botDraggableEle" draggable="true" ondragstart="drag(event)">
+                      [Name]<br> 
+                      <i>- Type</i>
+                      <p><b>Speed: 1</b><br>  
+                        <b>Skill:</b>  
+                        <select>
+                            <option>Basic: 0</option>
+                        </select>  
+                    </p> 
+                </div>
+
+            </div>
+            <div id="preset-converterAi" style="display: none;">
+                <div id="${Math.random()}" class="botDraggableEle" draggable="true" ondragstart="drag(event)">
+                      [Name]<br>
+                      <i>- Type</i>
+                      <p><b>Speed: 1</b><br>  
+                        <div class="converterProgressBar"></div>
+                    </p> 
+                </div>
+
+            </div>
+
+            
+            
+            <div id="botBinDiv" class="aiHolder" ondrop="drop(event)" ondragover="allowDrop(event)">
+                
+                
+            </div>
+            
+        </div>
+
+        <div>
+            <p  style="display: inline-block;" id="boardCapDiv">0/15 Boards</p>
+            <button id="upgradeAllBoardSpeed">Upgrade All Board Speeds</button>
+            <button id="upgradeAllBoardSkill">Upgrade All Board Skill</button>
+
+            <hr>
+
+            <script>
+                document.getElementById("upgradeAllBoardSpeed").onclick = function(){
+                    var boards = document.getElementById("boardBin").children
+                    function getBoardCost(id) {
+                        var c = 0
+                        for (let i = 0; i < boards.length; i++) {
+                            const board = boards[i];
+                            c += parseInt(board.costs[id].split(" ")[0])
+                        }
+                        return c
+                    }
+                    var cost = getBoardCost("speed")
+                    if (makePurchase(`${cost} tics`)) {
+                        for (let i = 0; i < boards.length; i++) {
+                            const board = boards[i];
+                            board.stats.speed = 1000 / ((1000 / board.stats.speed) * 1.05)
+                            board.costs.speed = multiplyCost(board.costs.speed, 1.15)
+                            board.children[3].children[1].innerHTML = `Upgrade Speed +10%<br>${board.costs.speed}`
+                        }
+                    }
+                }
+                document.getElementById("upgradeAllBoardSkill").onclick = function(){
+                    var boards = document.getElementById("boardBin").children
+                    function getBoardCost(id) {
+                        var c = 0
+                        for (let i = 0; i < boards.length; i++) {
+                            const board = boards[i];
+                            c += parseInt(board.costs[id].split(" ")[0])
+                        }
+                        return c
+                    }
+                    var cost = getBoardCost("skill")
+                    if (makePurchase(`${cost} tics`)) {
+                        for (let i = 0; i < boards.length; i++) {
+                            const board = boards[i];
+                            board.stats.missRate = (board.stats.missRate) * (0.9090909091)
+                            board.costs.skill = multiplyCost(board.costs.skill, 1.1)
+
+                            board.children[3].children[4].innerHTML = `Downgrade Skill -5%<br>${board.costs.skill}`
+                        }
+                    }
+                    
+                }
+                setInterval(() => {
+                    var boards = document.getElementById("boardBin").children
+                    function getBoardCost(id) {
+                        var c = 0
+                        for (let i = 0; i < boards.length; i++) {
+                            const board = boards[i];
+                            c += parseInt(board.costs[id].split(" ")[0])
+                        }
+                        return c
+                    }
+                    document.getElementById("upgradeAllBoardSpeed").innerHTML = `Upgrade All Board Speeds<br>${getBoardCost("speed")} tics`
+                    document.getElementById("upgradeAllBoardSkill").innerHTML = `Upgrade All Board Skills<br>${getBoardCost("skill")} tics`
+                }, (1000/15));
+            </script>
+        </div>
+    
+        <div class="pageSection">
+            
+            <div id="presetBoard-basic" style="display: none;">
+                <div class="board type-${id}" id="${Math.random()}">
+                    <div class="boardHeader">
+                        
+                        <button style="float: right;" id="boardRecycleButton">Delete Board</button>
+                    </div>
+                    <div class="boardGameArea">                    
+                        <div class="boardGameSquare" onclick="mouseClickGameTile(this, 1)">                                            
+                        </div>                    
+                        <div class="boardGameSquare" onclick="mouseClickGameTile(this, 2)">                                            
+                        </div>                    
+                        <div class="boardGameSquare" onclick="mouseClickGameTile(this, 3)">                                            
+                        </div>                    
+                        <div class="boardGameSquare" onclick="mouseClickGameTile(this, 4)">                                            
+                        </div>                    
+                        <div class="boardGameSquare" onclick="mouseClickGameTile(this, 5)">                                            
+                        </div>                    
+                        <div class="boardGameSquare" onclick="mouseClickGameTile(this, 6)">                                            
+                        </div>                    
+                        <div class="boardGameSquare" onclick="mouseClickGameTile(this, 7)">                                            
+                        </div>                    
+                        <div class="boardGameSquare" onclick="mouseClickGameTile(this, 8)">                                            
+                        </div>                    
+                        <div class="boardGameSquare" onclick="mouseClickGameTile(this, 9)">                                            
+                        </div>                
+                    </div>                
+                    <div class="botBoardSlot aiHolder" ondrop="drop(event)" ondragover="allowDrop(event)">                
+                    </div>
+                    <div class="boardUpgradeArea">
+                        <b>Speed: 1</b>
+                        <button>Upgrade Speed +5%<br>5 tics</button>    <hr>
+
+                        <b>Enemy Skill: 1</b>
+                        <button>Downgrade Skill -5%<br>10 tics</button>    <br>
+                    </div>
+            </div>
+            </div>
+
+            <div id="presetBoard-gold-basic" style="display: none;">
+                <div class="board type-${id}" id="${Math.random()}">
+                    <div class="boardHeader">
+                        
+                        <button style="float: right;" id="boardRecycleButton">Delete Board</button>
+                    </div>
+                    <div class="boardGameArea">                    
+                        <div class="boardGameSquare" onclick="mouseClickGameTile(this, 1)">                                            
+                        </div>                    
+                        <div class="boardGameSquare" onclick="mouseClickGameTile(this, 2)">                                            
+                        </div>                    
+                        <div class="boardGameSquare" onclick="mouseClickGameTile(this, 3)">                                            
+                        </div>                    
+                        <div class="boardGameSquare" onclick="mouseClickGameTile(this, 4)">                                            
+                        </div>                    
+                        <div class="boardGameSquare" onclick="mouseClickGameTile(this, 5)">                                            
+                        </div>                    
+                        <div class="boardGameSquare" onclick="mouseClickGameTile(this, 6)">                                            
+                        </div>                    
+                        <div class="boardGameSquare" onclick="mouseClickGameTile(this, 7)">                                            
+                        </div>                    
+                        <div class="boardGameSquare" onclick="mouseClickGameTile(this, 8)">                                            
+                        </div>                    
+                        <div class="boardGameSquare" onclick="mouseClickGameTile(this, 9)">                                            
+                        </div>                
+                    </div>                
+                    <div class="botBoardSlot aiHolder" ondrop="drop(event)" ondragover="allowDrop(event)">                
+                    </div>
+                    <div class="boardUpgradeArea">
+                        <b>Speed: 1</b>
+                        <button>Upgrade Speed +5%<br>5 tics</button>    <hr>
+
+                        <b>Enemy Skill: 1</b>
+                        <button>Downgrade Skill -5%<br>10 tics</button>    <br>
+                    </div>
+            </div>
+            </div>
+            
+            <div id="presetBoard-1d" style="display: none;">
+                <div class="board type-${id}" id="${Math.random()}">
+                    <div class="boardHeader">
+                        
+                        <button style="float: right;" id="boardRecycleButton">Delete Board</button>
+                    </div>
+                    <div class="boardGameArea">                    
+                        <div class="boardGameSquare" onclick="mouseClickGameTile(this, 1)">                                            
+                        </div>                    
+                        <div class="boardGameSquare" onclick="mouseClickGameTile(this, 2)">                                            
+                        </div>                    
+                        <div class="boardGameSquare" onclick="mouseClickGameTile(this, 3)">                                            
+                        </div>                    
+                        <div class="boardGameSquare" onclick="mouseClickGameTile(this, 4)">                                            
+                        </div>                    
+                        <div class="boardGameSquare" onclick="mouseClickGameTile(this, 5)">                                            
+                        </div>                    
+                        <div class="boardGameSquare" onclick="mouseClickGameTile(this, 6)">                                            
+                        </div>                    
+                        <div class="boardGameSquare" onclick="mouseClickGameTile(this, 7)">                                            
+                        </div>                    
+                        <div class="boardGameSquare" onclick="mouseClickGameTile(this, 8)">                                            
+                        </div>                    
+                        <div class="boardGameSquare" onclick="mouseClickGameTile(this, 9)">                                            
+                        </div>                
+                    </div>                
+                    <div class="botBoardSlot" ondrop="drop(event)" ondragover="allowDrop(event)">                
+                    </div>
+                    <div class="boardUpgradeArea">
+                        <b>Speed: 1</b>
+                        <button>Upgrade Speed +5%<br>5 tics</button>    <hr>
+
+                        <b>Enemy Skill: 1</b>
+                        <button>Downgrade Skill -5%<br>10 tics</button>    <br>
+                    </div>
+            </div>
+            </div>
+
+            <div id="presetBoard-numerical" style="display: none;">
+                <div class="board type-${id}" id="${Math.random()}">
+                    <div class="boardHeader">
+                        
+                        <button style="float: right;" id="boardRecycleButton">Delete Board</button>
+                    </div>
+                    <div class="boardGameArea">  
+                        <div class="boardGameSquares">
+                            <div class="boardGameSquare numberTile" onclick="mouseClickGameTileNumerical(this, 1)">1                                            
+                            </div>                    
+                            <div class="boardGameSquare numberTile" onclick="mouseClickGameTileNumerical(this, 2)">2                                            
+                            </div>                    
+                            <div class="boardGameSquare numberTile" onclick="mouseClickGameTileNumerical(this, 3)">3                                            
+                            </div>                    
+                            <div class="boardGameSquare numberTile" onclick="mouseClickGameTileNumerical(this, 4)">4                                            
+                            </div>                    
+                            <div class="boardGameSquare numberTile" onclick="mouseClickGameTileNumerical(this, 5)">5                                            
+                            </div>                    
+                            <div class="boardGameSquare numberTile" onclick="mouseClickGameTileNumerical(this, 6)">6                                            
+                            </div>                    
+                            <div class="boardGameSquare numberTile" onclick="mouseClickGameTileNumerical(this, 7)">7                                            
+                            </div>                    
+                            <div class="boardGameSquare numberTile" onclick="mouseClickGameTileNumerical(this, 8)">8                                            
+                            </div>                    
+                            <div class="boardGameSquare numberTile" onclick="mouseClickGameTileNumerical(this, 9)">9                                            
+                            </div>  
+                        </div>                  
+                        <div class="boardGameBin numberTile">
+
+                        </div>   
+                        <div class="boardGameBin numberTile">
+
+                        </div>     
+                    </div>           
+                    <div class="botBoardSlot" ondrop="drop(event)" ondragover="allowDrop(event)">                
+                    </div>
+                    <div class="boardUpgradeArea">
+                        <b>Speed: 1</b>
+                        <button>Upgrade Speed +5%<br>5 tics</button>    <hr>
+
+                        <b>Enemy Skill: 1</b>
+                        <button>Downgrade Skill -5%<br>10 tics</button>    <br>
+                    </div>
+            </div>
+            </div>
+
+            <div id="boardBin">
+                
+            </div>
+        </div>
+    </div>
+
+    <div class="footer" id="footer">
+        
+        <h3 style="text-align: center;" for="progressBar"></h3>
+        <p style="text-align: center;"></p>
+        <progress id="achievementProgressBar" name="progressBar" style="width: 100%; height: 50px;" value="50" max="100"></progress>
+    </div>
+    <script src="index.js"></script>
+    
+    <a href="https://aeolus-1.github.io/triangleGame.github.io/" target="_blank" id="shadyAd1" style=""><img src="imgs/shadyad30Secs.png" style="position: block; bottom: 0%; right: 0%; margin: 0%; width: 100%; height: 200px;"></a>
+    <script>
+        document.getElementById("shadyAd1").children[0].src = `imgs/shadyad${randInt(1, 3)}.png`
+
+        setTimeout(() => {
+            document.getElementById("shadyAd1").style.display = ""
+        }, randInt(1.5, 3)*60000);
+    </script>
+    
+    <script src="chs.js"></script>
+    <script src="core.js"></script>
+<!--客服 开始-->
+<script src="//g8hh.github.io/static/js/jquery.min.js"></script>
+<link rel="stylesheet" href="//g8hh.github.io/static/css/kf.css" type="text/css" media="screen" charset="utf-8">
+<script src="//g8hh.github.io/static/js/kf.js"></script>
+<!-- 客服 结束 -->
+<!--站长统计-->
+<div style="display: none"><script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?f237591d5976f87ca2e06b38c3658d9c";
+      var s = document.getElementsByTagName("script")[0]; 
+      s.parentNode.insertBefore(hm, s);
+    })();
+    </script>
+    
+        </div>
+</body>
+</html>
